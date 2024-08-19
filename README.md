@@ -10,3 +10,6 @@ The main advantage is that these scripts will check weather your local repo is a
 
 The other script ```Sync_pdfs``` is for syncing pdfs from Latex documents to more conveniant locations. 
 
+# Dependancies
+[git](https://git-scm.com/downloads) 
+
