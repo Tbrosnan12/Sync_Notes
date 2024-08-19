@@ -4,6 +4,7 @@
 Note_directories=("$HOME/Documents/Stylus_Labs_Write" "$HOME/Documents/TP_notes")
 
 up_to_date=true
+merger_issue=false
 
 for dir in "${Note_directories[@]}"; do
     cd  $dir
@@ -36,11 +37,17 @@ for dir in "${Note_directories[@]}"; do
         fi
         up_to_date=false
         done=true
+    fi
+    if [ "$done" = "false" ]; then
+        merger_issue=true
+        up_to_date=false
     fi   
 done
 
 if [ "${up_to_date}" = "true" ]; then
-    echo "All up to date :)"      # If nothing happened :)
+    echo "All up to date :)"      
+elif [ "$merger_issue" = true ]; then
+    echo "Uh oh seems there is a merger issue"         
 else
-    echo "All done!"          # when finished
+    echo "All done!"
 fi
