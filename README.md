@@ -1,6 +1,6 @@
 # Sync_Notes
 
-This is a repo holding scripts for auto syncing notes. 
+This is a repo holding scripts for auto syncing git repositories. 
 
 Works best by adding this repo to your path as well as placing : ```alias Sync="Sync_Notes.sh"``` to your .bashrc or config of whatever shell you use. 
 
