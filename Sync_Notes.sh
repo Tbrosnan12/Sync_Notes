@@ -23,7 +23,13 @@ for dir in "${Note_directories[@]}"; do
                                                    # do nothing if nothing to add 
     git status | grep "nothing to commit" > /dev/null 2>&1
     if [ $? = 0 ]; then
-        done=true
+        git status | grep "up to date with" > /dev/null 2>&1   #May be nothing to add, but still be a merger issue 
+        if [ $? = 0 ]; then
+            done=true
+        else
+            merger_issue=true
+            up_to_date=false
+        fi
     fi
 
     if [ "$done" = "false" ]; then                #If stuff to add check if ahead 
