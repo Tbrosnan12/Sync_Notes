@@ -14,9 +14,9 @@ else
     dir=$(pwd)
     repo_name=$(echo "${dir}" | awk -F'/' '{print $NF}')
 
-    if [ "$#" > 1 ]; then
-        for i in $(seq 1  1 $# ); do
-            commit_message+="${i} "     #check if there is a commit message 
+    if [ "$#" -gt 1 ]; then
+        for i in $@; do
+            commit_message+="${i}"     #check if there is a commit message 
         done
     fi
 
