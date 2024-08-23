@@ -2,7 +2,7 @@
 
 git_username=Tbrosnan12
 
-git rev-parse --is-inside-work-tree | grep true
+git rev-parse --is-inside-work-tree | grep true > /dev/null 2>&1
 if [ $? -ne 0 ]; then
     echo "Warning: you are not in a git repo directory"
 else
@@ -16,7 +16,7 @@ else
 
     if [ "$#" -gt 1 ]; then
         for i in $@; do
-            commit_message+="${i}"     #check if there is a commit message 
+            commit_message+="${i} "     #check if there is a commit message 
         done
     fi
 
