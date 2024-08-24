@@ -2,8 +2,8 @@
 
 git_username=Tbrosnan12
 
-git rev-parse --is-inside-work-tree | grep true > /dev/null 2>&1
-if [ $? -ne 0 ]; then
+
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     echo "Warning: you are not in a git repo directory"
 else
     up_to_date=true
@@ -68,7 +68,7 @@ else
 
 
     if [ "${up_to_date}" = "true" ]; then
-        echo "All up to date :)"      
+        echo "no updates needed :)"      
     elif [ "$merger_issue" = true ]; then
         echo "Uh oh seems there is a merger issue"         
     else
