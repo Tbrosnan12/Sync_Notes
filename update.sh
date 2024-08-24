@@ -29,7 +29,6 @@ if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
 else
     up_to_date=false
     merger_issue=false
-    done=false
     commit_message=""
 
     dir=$(git rev-parse --show-toplevel)    #directory of top directory in the git repo tree
