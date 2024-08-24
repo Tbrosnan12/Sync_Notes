@@ -9,7 +9,7 @@ else
     commit_message=""
 
     dir=$(git rev-parse --show-toplevel)
-    repo_name=$(echo "${dir}" | awk -F'/' '{print $NF}')
+    repo_name=$(echo "${dir}" | awk -F '/' '{print $NF}')
     git_username=$(git config user.name)
     
     #check if there is a commit message
