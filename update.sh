@@ -10,7 +10,6 @@ else
 
     dir=$(git rev-parse --show-toplevel)
     repo_name=$(echo "${dir}" | awk -F '/' '{print $NF}')
-    echo "repo name =${repo_name}ok"
     git_username=$(git config user.name)
     
     #check if there is a commit message
