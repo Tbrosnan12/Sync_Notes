@@ -12,15 +12,16 @@ else
     repo_name=$(echo "${dir}" | awk -F'/' '{print $NF}')
     git_username=$(git config user.name)
     
+    #check if there is a commit message
     if [ "$#" -gt 1 ]; then
         for i in $@; do
-            commit_message+="${i} "     #check if there is a commit message 
+            commit_message+="${i} "      
         done
     fi
 
     #Fetch origin to compare 
     git fetch origin --quiet
-    if git status | grep behind > /dev/null 2>&1; then               # pull from origin if behind
+    if git status | grep behind > /dev/null 2>&1; then  # pull from origin if behind
         echo "repo ${repo_name} is behind origin, pulling..."  
         git pull origin main --quiet
         done=true
@@ -37,15 +38,15 @@ else
     fi
 
 
-    if [ "$done" = "false" ]; then                #If stuff to add check if ahead 
+    if [ "$done" = "false" ]; then  #If stuff to add check if ahead 
         git add --all > /dev/null
         if [ -z "$commit_message" ]; then
             git commit -m "auto-sync" > /dev/null
         else
             git commit -m "${commit_message}" > /dev/null  #add optional commit message 
         fi
-        if git status | grep ahead > /dev/null 2>&1; then
-            echo "repo ${repo_name} is ahead of origin, pushing..."    # push to origin if ahead 
+        if git status | grep ahead > /dev/null 2>&1; then   # push to origin if ahead
+            echo "repo ${repo_name} is ahead of origin, pushing..."     
             git remote set-url origin git@github.com:${git_username}/${repo_name}.git
             git push origin main --quiet
         fi
