@@ -63,7 +63,7 @@ else
     if [ "${up_to_date}" = "true" ]; then
         echo "No updates needed :)"      
     elif [ "$merger_issue" = true ]; then
-        echo "Uh oh seems there is a merger issue"         
+        echo "Uh oh seems there is a merger issue :("         
     else
         echo "All done!"
     fi
