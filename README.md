@@ -10,7 +10,9 @@ The main advantage is that these scripts will check weather your local repo is a
 
 Also includes passing of commit messages. The default message is ```auto-sync``` but typing anything next to update will pass it through as a commit message. For example: 
 
-```update this is a commit message```
+```
+update this is a commit message
+```
 
 The other scripts in  ```Notes``` are for syncing notes directories. 
 
