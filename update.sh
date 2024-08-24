@@ -8,7 +8,7 @@ else
     done=false
     commit_message=""
 
-    dir=$(pwd)
+    dir=$(git rev-parse --show-toplevel)
     repo_name=$(echo "${dir}" | awk -F'/' '{print $NF}')
     git_username=$(git config user.name)
     
