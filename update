@@ -59,7 +59,7 @@ else
             merger_issue=true
         elif git status | grep behind > /dev/null 2>&1; then  # pull from origin if behind
             pull "${repo_name}"
-        elif git status | grep "up to date with" > /dev/null 2>&1; then    #May be nothing to add, but still be a merger issue 
+        elif git status | grep "up to date with" > /dev/null 2>&1; then    #Make sure there is no merger issue 
             up_to_date=true
         elif git status | grep ahead > /dev/null 2>&1; then   # push to origin if ahead
             push "${repo_name}"
