@@ -75,4 +75,26 @@ else
     else
         echo "All done!"
     fi
+
+    if [ "$merger_issue" = true ]; then
+        current_branch=$(echo "$(git --no-pager branch)" | awk -F '*' '{print $NF}')
+        origin_branch=$(git --no-pager branch -a | grep '\->' | awk -F 'HEAD ->' '{print $NF}')
+        
+        diff_list=$(git --no-pager diff --name-status ${current_branch} ${origin_branch}| grep -w 'M' | awk -F ' ' '{print $NF}' )
+        echo "The following files are divergent between local branch and origin:"
+        echo "${diff_list}"
+
+        read -p "Do you want to attempt basic merger? (Y/n) " response
+        if [ "$response" != "Y" ]; then
+            exit 1
+        else
+            git config pull.rebase false
+            git pull --no-edit origin main --quiet
+            if [ $? -ne 0 ]; then
+                git pull origin main | grep "CONFLICT"
+            else
+                echo "merge succsessful!"
+            fi
+        fi 
+    fi
 fi
