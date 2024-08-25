@@ -2,7 +2,7 @@
 
 This is a repo holding scripts for auto syncing git repositories. 
 
-Works best by adding this repo to your path.  
+Works best by adding this repo to your path, or you can just move ```update``` to a directory that is in your path.  
 
 Then calling ```update``` in the terminal, when in a git repo, will update that repo. 
 
