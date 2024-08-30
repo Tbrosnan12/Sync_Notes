@@ -20,4 +20,4 @@ The other scripts in  ```Notes``` are for syncing notes directories.
 [git](https://git-scm.com/downloads) 
 
 # Flowchart 
-![update_flowchart](https://github.com/user-attachments/assets/0f87d6ab-4fa4-4a55-a808-8e88b321b2f6)
+![updat_flowchart](https://github.com/user-attachments/assets/e02648fb-c801-4074-8522-e565b1979eaf)
