@@ -19,3 +19,5 @@ The other scripts in  ```Notes``` are for syncing notes directories.
 # Dependancies
 [git](https://git-scm.com/downloads) 
 
+# Flowchart 
+![update_flowchart(1)](https://github.com/user-attachments/assets/e7a8ee91-acac-48b0-9cf1-14fbf10ab2a7)
