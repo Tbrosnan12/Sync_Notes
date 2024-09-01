@@ -3,6 +3,7 @@
 
 #Usefull  functions 
 function pull() {
+    status=pulled
     if [ "$check" = true ]; then
         return 0
     fi
@@ -24,6 +25,7 @@ function commit() {
 }
 
 function push() {
+    status=pushed
     if [ "$check" = true ]; then
         return 0
     fi
@@ -59,15 +61,12 @@ done
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     echo "Warning: you are not in a git repo directory"
 else
-    up_to_date=false
-    merger_issue=false
-    commit_message=""
-
     dir=$(git rev-parse --show-toplevel)    #directory of top directory in the git repo tree
     repo_name=$(echo "${dir}" | awk -F '/' '{print $NF}')
     git_username=$(git config user.name)
     
     #check if there is a commit message
+    commit_message=""
     if [ "$#" -gt 1 ]; then
         for i in $@; do
             commit_message+="${i} "      
@@ -79,34 +78,41 @@ else
 
     if git status | grep "nothing to commit" > /dev/null 2>&1; then     # do nothing if nothing to add 
         if git status | grep "up to date with" > /dev/null 2>&1; then    #May be nothing to add, but still be a merger issue 
-            up_to_date=true
+            status=up_to_date
         elif git status | grep behind > /dev/null 2>&1; then  # pull from origin if behind
             pull "${repo_name}"  
         else
-            merger_issue=true
+            status=merger_issue
         fi
     else
         commit
         if git status | grep "diverged" > /dev/null 2>&1; then
-            merger_issue=true
+            status=merger_issue
         elif git status | grep behind > /dev/null 2>&1; then  # pull from origin if behind
             pull "${repo_name}"
         elif git status | grep "up to date with" > /dev/null 2>&1; then    #Make sure there is no merger issue 
-            up_to_date=true
+            status=up_to_date
         elif git status | grep ahead > /dev/null 2>&1; then   # push to origin if ahead
             push "${repo_name}"
+        else
+            echo "This is a never before seen bug please contact the owner of the update repo"
         fi
     fi
 
 
     #echo what has happened :)
-    if [ "${up_to_date}" = "true" ]; then
+    if [ "${status}" = "up_to_date" ]; then
         echo "No updates needed :)"      
-    elif [ "$merger_issue" = true ]; then
+    elif [ "$status" = "merger_issue" ]; then
         echo "Uh oh seems there is a merger issue :("         
     else
         if [ "$check" = true ]; then
-            echo "we just checked"
+            echo "Checked what needs to be done:"
+            if [ "$status"="pulled" ]; then
+                echo "repo ${repo_name} is behind origin, need to pull"
+            elif [ "$status"="pushed" ]; then
+                echo "repo ${repo_name} is ahead origin, need to push"
+            fi
         else
             echo "All done!"
         fi    
