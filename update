@@ -1,6 +1,12 @@
 #!/bin/bash
 
+
+#Usefull  functions 
 function pull() {
+    if [ "$check" = true ]; then
+        return 0
+    fi
+
     if [ "$#" -gt 1 ]; then
         local repo_name=$1 
         echo "repo ${repo_name} is behind origin, pulling..."  
@@ -18,6 +24,10 @@ function commit() {
 }
 
 function push() {
+    if [ "$check" = true ]; then
+        return 0
+    fi
+
     if [ "$#" -gt 1 ]; then
         local repo_name=$1
         echo "repo ${repo_name} is ahead of origin, pushing..."     
@@ -26,8 +36,26 @@ function push() {
     git push origin main --quiet
 }
 
+function fetch() {
+    git fetch origin --quiet
+}
 
 
+check=false
+while getopts "c" opt; do
+  case $opt in
+    c)
+      check=true
+      ;;
+    \?)
+      echo "Usage: $(basename $0) [-c]"
+      exit 1
+      ;;
+  esac
+done
+
+
+#Starting script
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     echo "Warning: you are not in a git repo directory"
 else
@@ -47,7 +75,7 @@ else
     fi
 
     #Fetch origin to compare 
-    git fetch origin --quiet
+    fetch
 
     if git status | grep "nothing to commit" > /dev/null 2>&1; then     # do nothing if nothing to add 
         if git status | grep "up to date with" > /dev/null 2>&1; then    #May be nothing to add, but still be a merger issue 
@@ -77,7 +105,11 @@ else
     elif [ "$merger_issue" = true ]; then
         echo "Uh oh seems there is a merger issue :("         
     else
-        echo "All done!"
+        if [ "$check" = true ]; then
+            echo "we just checked"
+        else
+            echo "All done!"
+        fi    
     fi
 
     if [ "$merger_issue" = true ]; then
