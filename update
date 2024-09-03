@@ -4,8 +4,8 @@
 #Usefull  functions 
 function pull() {
     status=pulled
-    if [ "$check" = true ]; then
-        return 0
+    if [ "$check" = true ]; then 
+        return 0 
     fi
 
     if [ "$#" -gt 0 ]; then
@@ -26,8 +26,8 @@ function commit() {
 
 function push() {
     status=pushed
-    if [ "$check" = true ]; then
-        return 0
+    if [ "$check" = true ]; then 
+        return 0 
     fi
 
     if [ "$#" -gt 0 ]; then
@@ -44,10 +44,20 @@ function fetch() {
 
 
 check=false
-while getopts "c" opt; do
+excluding_files=()
+while getopts "ce:" opt; do
   case $opt in
     c)
       check=true
+      ;;
+    e)
+      while [ $# -gt 0 ]; do
+        shift
+        if [[ $1 == -* ]]; then
+          break
+        fi
+        files+=("$1")
+      done
       ;;
     \?)
       echo "Usage: $(basename $0) [-c]"
@@ -57,6 +67,8 @@ while getopts "c" opt; do
 done
 
 
+
+
 #Starting script
 if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
     echo "Warning: you are not in a git repo directory"
@@ -64,7 +76,18 @@ else
     dir=$(git rev-parse --show-toplevel)    #directory of top directory in the git repo tree
     repo_name=$(echo "${dir}" | awk -F '/' '{print $NF}')
     git_username=$(git config user.name)
-    
+
+    #see if there is a file to exclude from adding 
+    if [ ${#excluding_files[@]} -ne 0 ]; then
+        if [! -f ".gitignore"]; then
+            touch $dir/.gitignore
+        fi
+        for file in "${excluding_files[@]}"; do
+            echo $file >> $dir/.gitignore
+        done
+    fi
+
+
     #check if there is a commit message
     commit_message=""
     if [ "$#" -gt 1 ]; then
