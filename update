@@ -56,16 +56,15 @@ while getopts "ce:" opt; do
         if [[ $1 == -* ]]; then
           break
         fi
-        files+=("$1")
+        excluding_files+=("$1")
       done
       ;;
     \?)
-      echo "Usage: $(basename $0) [-c]"
+      echo "Usage: $(basename $0) [-c] [-e] [files to exclude]"
       exit 1
       ;;
   esac
 done
-
 
 
 
@@ -79,11 +78,16 @@ else
 
     #see if there is a file to exclude from adding 
     if [ ${#excluding_files[@]} -ne 0 ]; then
-        if [! -f ".gitignore"]; then
+        if [ ! -f ".gitignore" ]; then
             touch $dir/.gitignore
         fi
         for file in "${excluding_files[@]}"; do
-            echo $file >> $dir/.gitignore
+            if [ ! -z $file ]; then
+                if ! grep -q "$file" "$dir/.gitignore"; then
+                    echo "$file" >> "$dir/.gitignore"
+                    echo "added $file to .gitignore, it won't be included in the commit"
+                fi
+            fi      
         done
     fi
 
@@ -124,6 +128,11 @@ else
         fi
     fi
 
+    #If we were just checking, undo last commit
+    if [ "$check" = true ]; then
+        echo "Checked what needs to be done:"
+        git reset --soft HEAD~1 > /dev/null 2>&1
+    fi
 
     #echo what has happened :)
     if [ "${status}" = "up_to_date" ]; then
@@ -132,7 +141,6 @@ else
         echo "Uh oh seems there is a merger issue :("         
     else
         if [ "$check" = true ]; then
-            echo "Checked what needs to be done:"
             if [ "$status"="pulled" ]; then
                 echo "repo ${repo_name} is behind origin, need to pull"
             elif [ "$status"="pushed" ]; then
