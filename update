@@ -85,7 +85,7 @@ else
             if [ ! -z $file ]; then
                 if ! grep -q "$file" "$dir/.gitignore"; then
                     echo "$file" >> "$dir/.gitignore"
-                    echo "added $file to .gitignore, it won't be included in the commit"
+                    echo "added $file to .gitignore, it won't be included in future commits"
                 fi
             fi      
         done
