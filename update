@@ -61,7 +61,7 @@ while getopts "ce:" opt; do
       done
       ;;
     \?)
-      echo "Usage: $(basename $0) [-c] [-e] [files to exclude]"
+      echo "Usage: $(basename $0) [-c] [-e <files to exclude>]"
       exit 1
       ;;
   esac
@@ -132,7 +132,7 @@ else
         fi
     fi
 
-    #If we were just checking, undo last commit
+    #If we were just checking and we commited, undo last commit
     if [ "$check" = true ] && [ "$commited" = true ]; then
         echo "Checked what needs to be done:"
         git reset --soft HEAD~1 > /dev/null 2>&1
