@@ -13,6 +13,9 @@ Also includes passing of commit messages. The default message is ```auto-sync```
 ```
 update this is a commit message
 ```
+There are also options to check what the scropt will do with out actually pushing/[ulling or making commits (```update -c```).
+
+Files that that are in the git repo directory but are not wanted in the push to origin can be excluded with ```update -e <files to exclude>```.
 
 The other scripts in  ```Notes``` are for syncing notes directories. 
 
