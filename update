@@ -1,0 +1,232 @@
+#!/bin/bash
+
+
+#Usefull  functions 
+function pull() {
+    status=pulled
+    if [ "$check" = true ]; then 
+        return 0 
+    fi
+
+    if [ "$#" -gt 0 ]; then
+        local repo_name=$1 
+        echo "repo ${repo_name} is behind origin, pulling..."  
+    fi
+    git pull origin main --quiet
+}
+
+function commit() {
+    commited=true
+    git add --all > /dev/null
+    if [ -z "$commit_message" ]; then
+        git commit -m "auto-sync" > /dev/null
+    else
+        git commit -m "${commit_message}" > /dev/null  #add optional commit message 
+    fi
+}
+
+function push() {
+    status=pushed
+    if [ "$check" = true ]; then 
+        return 0 
+    fi
+
+    if [ "$#" -gt 0 ]; then
+        local repo_name=$1
+        echo "repo ${repo_name} is ahead of origin, pushing..."     
+    fi
+    git remote set-url origin git@github.com:${git_username}/${repo_name}.git 
+    git push origin main --quiet
+}
+
+function fetch() {
+    git fetch origin --quiet
+}
+
+usage() {
+  echo "Usage: $(basename $0) [COMMIT MESSAGE] [OPTIONS] "
+  echo
+  echo "Options:"
+  echo "  -c, --check                Check what needs to be done but dont actually commit or push/pull"
+  echo "  -e, --exclude FILES...     Exclude FILES from this push"
+  echo "  -h, --help                 Display this help message and exit"
+  echo "  -p, --permanently-exclude  Permanently exclude FILES from future pushes"
+  echo
+  exit 1
+}
+
+
+# Use `getopt` to handle both short and long options
+TEMP=$(getopt -o cphe: --long check,permanently-exclude,help,exclude: -n 'scriptname' -- "$@")
+if [ $? != 0 ]; then usage; exit 1; fi
+
+eval set -- "$TEMP"
+
+# Parse the options
+while true; do
+  case "$1" in
+    -c|--check)
+      check=true
+      shift
+      ;;
+    -h|--help)
+      usage
+      ;;
+    -e|--exclude)
+      # Gather files to exclude
+      shift
+      while [ $# -gt 0 ]; do
+        if [[ $1 == -* ]]; then
+          break
+        fi
+        excluding_files+=("$1")
+        shift
+      done
+      ;;
+    -p|--permanently-exclude)
+      # Gather files to permanently exclude
+      $permanent_exclude=true
+      shift
+      while [ $# -gt 0 ]; do
+        if [[ $1 == -* ]]; then
+          break
+        fi
+        excluding_files+=("$1")
+        shift
+      done
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Invalid option"
+      usage
+      exit 1
+      ;;
+  esac
+done
+
+
+
+#Starting script
+if ! git rev-parse --is-inside-work-tree > /dev/null 2>&1; then
+    echo "Warning: you are not in a git repo directory"
+else
+    dir=$(git rev-parse --show-toplevel)    #directory of top directory in the git repo tree
+    repo_name=$(echo "${dir}" | awk -F '/' '{print $NF}')
+    git_username=$(git config user.name)
+
+    
+    #see if there are files to exclude from adding 
+    if [ ${#excluding_files[@]} -ne 0 ]; then
+        if [ ! -f ".gitignore" ]; then
+            touch $dir/.gitignore
+        fi
+        for file in "${excluding_files[@]}"; do
+            if [ ! -z $file ] && [ -f $file ]; then
+                if ! grep -q "$file" "$dir/.gitignore"; then
+                    git rm --cached $file  > /dev/null 2>&1
+                    echo -e "\n$file" >> "$dir/.gitignore"
+                    echo "added $file to .gitignore, it won't be included in future commits"
+                fi
+            fi      
+        done
+    fi
+
+
+    #check if there is a commit message
+    commit_message=""
+    if [ "$#" -gt 1 ]; then
+        for i in $@; do
+            commit_message+="${i} "      
+        done
+    fi
+
+
+    #Fetch origin to compare 
+    fetch
+
+    if git status | grep "nothing to commit" > /dev/null 2>&1; then     # do nothing if nothing to add 
+        if git status | grep "up to date with" > /dev/null 2>&1; then    #May be nothing to add, but still be a merger issue 
+            status=up_to_date
+        elif git status | grep behind > /dev/null 2>&1; then  # pull from origin if behind
+            pull "${repo_name}"
+        elif git status | grep ahead > /dev/null 2>&1; then  # pull from origin if behind
+            push "${repo_name}"   
+        else
+            status=merger_issue
+        fi
+    else
+        commit
+        if git status | grep "diverged" > /dev/null 2>&1; then
+            status=merger_issue
+        elif git status | grep behind > /dev/null 2>&1; then  # pull from origin if behind
+            pull "${repo_name}"
+        elif git status | grep "up to date with" > /dev/null 2>&1; then    #Make sure there is no merger issue 
+            status=up_to_date
+        elif git status | grep ahead > /dev/null 2>&1; then   # push to origin if ahead
+            push "${repo_name}"
+        else
+            echo "This is a never before seen bug please contact the owner of the update repo"
+        fi
+    fi
+
+    #If we were just checking and we commited, undo last commit
+    if [ "$check" = true ] && [ "$commited" = true ]; then
+        echo "Checked what needs to be done:"
+        git reset --soft HEAD~1 > /dev/null 2>&1
+    fi
+
+    #If we are only temporarily are exliding files then remove them from .gitignore
+    if [ ! "$permanent_exclude" = true ]; then
+        for file in "${excluding_files[@]}"; do
+            if [ ! -z $file ] && [ -f $file ]; then
+                if grep -q "$file" "$dir/.gitignore"; then
+                    grep -v "$file" $dir/.gitignore > temp && mv temp $dir/.gitignore
+                fi
+            fi      
+        done
+    fi
+    #echo what has happened :)
+    if [ "${status}" = "up_to_date" ]; then
+        echo "No updates needed :)"      
+    elif [ "$status" = "merger_issue" ]; then
+        echo "Uh oh seems there is a merger issue :("         
+    else
+        if [ "$check" = true ]; then
+            if [ "$status"="pulled" ]; then
+                echo "repo ${repo_name} is behind origin, need to pull"
+            elif [ "$status"="pushed" ]; then
+                echo "repo ${repo_name} is ahead origin, need to push"
+            fi
+        else
+            echo "All done!"
+        fi    
+    fi
+
+    # Try fix merger issue if wanted
+    if [ "$status" = "merger_issue" ]; then
+        current_branch=$(echo "$(git --no-pager branch)" | awk -F '*' '{print $NF}')
+        origin_branch=$(git --no-pager branch -a | grep '\->' | awk -F 'HEAD ->' '{print $NF}')
+        
+        diff_list=$(git --no-pager diff --name-status ${current_branch} ${origin_branch}| grep -w 'M' | awk -F ' ' '{print $NF}' )
+        echo "The following files are divergent between local branch and origin:"
+        echo "${diff_list}"
+
+        read -p "Do you want to attempt basic merger? (Y/n) " response
+        if [ "$response" != "Y" ]; then
+            exit 1
+        else
+            git config pull.rebase false
+            git pull --no-edit origin main --quiet
+            if [ $? -ne 0 ]; then
+                git pull origin main | grep "CONFLICT"
+                echo "Merge unsuccesfull :(" 
+            else
+                push
+                echo "Merge succsessful!"
+            fi
+        fi 
+    fi
+fi
