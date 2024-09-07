@@ -43,26 +43,65 @@ function fetch() {
     git fetch origin --quiet
 }
 
+usage() {
+  echo "Usage: $(basename $0) [COMMIT MESSAGE] [OPTIONS] "
+  echo
+  echo "Options:"
+  echo "  -c, --check                Check what needs to be done but dont actually commit or push/pull"
+  echo "  -e, --exclude FILES...     Exclude FILES from this push"
+  echo "  -h, --help                 Display this help message and exit"
+  echo "  -p, --permanently-exclude  Permanently exclude FILES from future pushes"
+  echo
+  exit 1
+}
 
-#options 
-check=false
-excluding_files=()
-while getopts "ce:" opt; do
-  case $opt in
-    c)
+
+# Use `getopt` to handle both short and long options
+TEMP=$(getopt -o cphe: --long check,permanently-exclude,help,exclude: -n 'scriptname' -- "$@")
+if [ $? != 0 ]; then usage; exit 1; fi
+
+eval set -- "$TEMP"
+
+# Parse the options
+while true; do
+  case "$1" in
+    -c|--check)
       check=true
+      shift
       ;;
-    e)
+    -h|--help)
+      usage
+      ;;
+    -e|--exclude)
+      # Gather files to exclude
+      shift
       while [ $# -gt 0 ]; do
-        shift
         if [[ $1 == -* ]]; then
           break
         fi
         excluding_files+=("$1")
+        shift
       done
       ;;
-    \?)
-      echo "Usage: $(basename $0) [<commit message>] [-c] [-e <files to exclude>]"
+    -p|--permanently-exclude)
+      # Gather files to permanently exclude
+      $permanent_exclude=true
+      shift
+      while [ $# -gt 0 ]; do
+        if [[ $1 == -* ]]; then
+          break
+        fi
+        excluding_files+=("$1")
+        shift
+      done
+      ;;
+    --)
+      shift
+      break
+      ;;
+    *)
+      echo "Invalid option"
+      usage
       exit 1
       ;;
   esac
@@ -139,6 +178,16 @@ else
         git reset --soft HEAD~1 > /dev/null 2>&1
     fi
 
+    #If we are only temporarily are exliding files then remove them from .gitignore
+    if [ ! "$permanent_exclude" = true ]; then
+        for file in "${excluding_files[@]}"; do
+            if [ ! -z $file ] && [ -f $file ]; then
+                if grep -q "$file" "$dir/.gitignore"; then
+                    grep -v "$file" $dir/.gitignore > temp && mv temp $dir/.gitignore
+                fi
+            fi      
+        done
+    fi
     #echo what has happened :)
     if [ "${status}" = "up_to_date" ]; then
         echo "No updates needed :)"      
