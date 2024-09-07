@@ -44,6 +44,7 @@ function fetch() {
 }
 
 
+#options 
 check=false
 excluding_files=()
 while getopts "ce:" opt; do
@@ -61,7 +62,7 @@ while getopts "ce:" opt; do
       done
       ;;
     \?)
-      echo "Usage: $(basename $0) [-c] [-e <files to exclude>]"
+      echo "Usage: $(basename $0) [<commit message>] [-c] [-e <files to exclude>]"
       exit 1
       ;;
   esac
@@ -155,7 +156,7 @@ else
         fi    
     fi
 
-
+    # Try fix merger issue if wanted
     if [ "$status" = "merger_issue" ]; then
         current_branch=$(echo "$(git --no-pager branch)" | awk -F '*' '{print $NF}')
         origin_branch=$(git --no-pager branch -a | grep '\->' | awk -F 'HEAD ->' '{print $NF}')
